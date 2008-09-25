@@ -12,7 +12,7 @@ import net.stoerr.timetrack.entity.TimeEntry;
 /**
  * Controller für die Operationen an TimeEntries.
  * 
- * @see http 
+ * @see http
  *      ://www.hibernate.org/hib_docs/entitymanager/reference/en/html/queryhql
  *      .html
  * 
@@ -26,32 +26,38 @@ public class TimeEntryController {
             .getLog(TimeEntryController.class);
 
     private static boolean initialized = false;
-    
-    /** The emfactory is only created when emfactory is first accessed. */
-    @SuppressWarnings("synthetic-access")
-    private static class EMFHelper {
-        static final EntityManagerFactory emfactory = Persistence.createEntityManagerFactory("timetrack");
-        static final EntityManager emanager = emfactory.createEntityManager();
-        static {
+
+    static final EntityManagerFactory emfactory;
+
+    static final EntityManager emanager;
+    static {
+        try {
+            emfactory = Persistence.createEntityManagerFactory("timetrack");
+            emanager = emfactory.createEntityManager();
             initialized = true;
+        } catch (Exception e) {
+            LOG.error(e, e);
+            throw new ExceptionInInitializerError(e);
         }
     }
-    
+
     private static EntityManager getEntityManager() {
-        return EMFHelper.emanager;
+        return emanager;
     }
-    
+
     public void TimeEntryController() {
         // empty
     }
-    
+
     public void createEntry(TimeEntry entry) {
         getEntityManager().persist(entry);
     }
 
     @SuppressWarnings("unchecked")
     public List<TimeEntry> getEntries() {
-        return getEntityManager().createQuery("from TimeEntry order by time").getResultList();
+        final List resultList = getEntityManager().createQuery("from TimeEntry order by time")
+                        .getResultList();
+        return resultList;
     }
 
     public EntityTransaction getTransaction() {
@@ -60,12 +66,12 @@ public class TimeEntryController {
 
     public void shutdown() {
         if (initialized) {
-            EMFHelper.emfactory.close();
+            emfactory.close();
         }
     }
 
     public void startup() {
-        EMFHelper.emfactory.isOpen();
+        getEntries();        
     }
 
     @SuppressWarnings("null")
