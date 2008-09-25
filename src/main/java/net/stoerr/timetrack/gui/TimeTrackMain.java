@@ -2,9 +2,14 @@ package net.stoerr.timetrack.gui;
 
 import java.awt.BorderLayout;
 import java.awt.Frame;
+import java.awt.event.ActionEvent;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
+import java.util.Date;
 import java.util.List;
+import javax.swing.AbstractAction;
 
 import javax.swing.JButton;
 import javax.swing.JLabel;
@@ -13,6 +18,7 @@ import javax.swing.JTabbedPane;
 import javax.swing.JTable;
 import javax.swing.JTextField;
 import javax.swing.SwingUtilities;
+import javax.swing.SwingWorker;
 import javax.swing.WindowConstants;
 
 import net.stoerr.timetrack.controller.TimeEntryController;
@@ -31,14 +37,19 @@ import net.stoerr.timetrack.entity.TimeEntry;
 public class TimeTrackMain extends javax.swing.JFrame {
 
     /** Logger for TimeTrackMain */
-    private static final org.apache.log4j.Logger LOG = org.apache.log4j.Logger.getLogger(TimeTrackMain.class);
+    private static final org.apache.log4j.Logger LOG = org.apache.log4j.Logger
+            .getLogger(TimeTrackMain.class);
 
     static private JTabbedPane tabPane;
 
     static private JTable lastEventsTable;
 
     static private JLabel taskLabel;
+
+    private AbstractAction saveAction;
+
     private TimeEntryTableModel lastEventsTableModel;
+
     private TimeEntryController controller;
 
     static private JButton newEntryButton;
@@ -109,13 +120,21 @@ public class TimeTrackMain extends javax.swing.JFrame {
                     tabPane.addTab("new", null, newEventTab, null);
                     BorderLayout newEventTabLayout = new BorderLayout();
                     newEventTab.setLayout(newEventTabLayout);
-                    newEventTab.setPreferredSize(new java.awt.Dimension(387, 225));
+                    newEventTab.setPreferredSize(new java.awt.Dimension(387,
+                            225));
                     {
                         lastEventsTableModel = new TimeEntryTableModel();
                         lastEventsTable = new JTable();
                         newEventTab.add(lastEventsTable, BorderLayout.CENTER);
                         lastEventsTable.setModel(lastEventsTableModel);
-                        lastEventsTable.setPreferredSize(new java.awt.Dimension(387, 207));
+                        lastEventsTable
+                                .setPreferredSize(new java.awt.Dimension(387,
+                                        207));
+                        lastEventsTable.addMouseListener(new MouseAdapter() {
+                            public void mouseClicked(MouseEvent evt) {
+                                lastEventsTableMouseClicked(evt);
+                            }
+                        });
                     }
                     {
                         newEventPanel = new JPanel();
@@ -129,21 +148,31 @@ public class TimeTrackMain extends javax.swing.JFrame {
                         }
                         {
                             taskField = new JTextField();
-                            newEventPanel.add(getTaskField(), BorderLayout.CENTER);
-                            taskField.setText("Task");
+                            newEventPanel.add(getTaskField(),
+                                    BorderLayout.CENTER);
+                            taskField.setText("");
                         }
                         {
                             newEntryButton = new JButton();
-                            newEventPanel.add(newEntryButton, BorderLayout.EAST);
+                            newEventPanel
+                                    .add(newEntryButton, BorderLayout.EAST);
                             newEntryButton.setText("Save");
+                            newEntryButton.setAction(getSaveAction());
                         }
                     }
                 }
             }
             setSize(400, 300);
+            setupKill();
         } catch (Exception e) {
             LOG.error(e, e);
         }
+    }
+
+    public void refresh() {
+        List<TimeEntry> entries = getController().getEntries();
+        getLastEventsTableModel().setEntries(entries);
+        getLastEventsTableModel().fireTableDataChanged();
     }
 
     void thisWindowActivated(WindowEvent evt) {
@@ -151,8 +180,7 @@ public class TimeTrackMain extends javax.swing.JFrame {
         SwingUtilities.invokeLater(new Runnable() {
             @Override
             public void run() {
-                List<TimeEntry> entries = getController().getEntries();
-                getLastEventsTableModel().setEntries(entries);
+                refresh();
             }
         });
     }
@@ -160,6 +188,55 @@ public class TimeTrackMain extends javax.swing.JFrame {
     void thisWindowClosed(WindowEvent evt) {
         LOG.info("Shutdown. " + evt);
         getController().shutdown();
+    }
+
+    public void save() {
+        final String text = getTaskField().getText();
+        if (null != text && !"".equals(text.trim())) {
+            TimeEntry entry = new TimeEntry();
+            entry.setTask(text.trim());
+            entry.setTime(new Date());
+            getController().getTransaction().begin();
+            getController().createEntry(entry);
+            getController().getTransaction().commit();
+        }
+        refresh();
+    }
+
+    private AbstractAction getSaveAction() {
+        if (saveAction == null) {
+            saveAction = new AbstractAction("Save", null) {
+                public void actionPerformed(ActionEvent evt) {
+                    save();
+                }
+            };
+        }
+        return saveAction;
+    }
+    
+    private void lastEventsTableMouseClicked(MouseEvent evt) {
+        System.out.println("lastEventsTable.mouseClicked, event="+evt);
+        int row = lastEventsTable.getSelectedRow();
+        getTaskField().setText(getLastEventsTableModel().getEntries().get(row).getTask());
+    }
+    
+    private void setupKill() 
+    {
+        new SwingWorker<Void, Void>() {
+
+            @Override
+            protected Void doInBackground() throws Exception {
+                Thread.sleep(15*1000*1000);
+                return null;
+            }
+            
+            @Override
+            protected void done() {
+                setVisible(false);
+                dispose();
+            }
+            
+        }.execute();
     }
 
 }

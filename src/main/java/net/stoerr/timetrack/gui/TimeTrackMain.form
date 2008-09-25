@@ -5,16 +5,36 @@
 				<LayoutConstraint/>
 			</Constraints>
 			<SubComponents>
-				<Component class="javax.swing.table.DefaultTableModel" name="%0.%0.%1.%0.%0.%1.lastEventsTableModel" style="0">
+				<Component class="com.cloudgarden.jigloo.actions.ActionStub" name="saveAction">
 					<Constraints>
 						<LayoutConstraint/>
 					</Constraints>
-					<Events>
-					</Events>
+					<Properties>
+						<Property name="text" type="String" value="Save"/>
+					</Properties>
+				</Component>
+				<Component class="org.apache.log4j.Logger" name="LOG" style="0">
+					<Constraints>
+						<LayoutConstraint/>
+					</Constraints>
+					<Properties>
+					</Properties>
+				</Component>
+				<Component class="net.stoerr.timetrack.entity.TimeEntry" name="%0.%6.entry" style="0">
+					<Constraints>
+						<LayoutConstraint/>
+					</Constraints>
 					<Properties>
 					</Properties>
 				</Component>
 				<Component class="net.stoerr.timetrack.controller.TimeEntryController" name="controller" style="0">
+					<Constraints>
+						<LayoutConstraint/>
+					</Constraints>
+					<Properties>
+					</Properties>
+				</Component>
+				<Component class="net.stoerr.timetrack.gui.TimeEntryTableModel" name="lastEventsTableModel" style="0">
 					<Constraints>
 						<LayoutConstraint/>
 					</Constraints>
@@ -30,6 +50,7 @@
 		</Constraints>
 		<Events>
 			<EventHandler event="windowClosed" handler="thisWindowClosedhandler method" listener="java.awt.event.WindowListener"/>
+			<EventHandler event="windowActivated" handler="thisWindowActivatedhandler method" listener="java.awt.event.WindowListener"/>
 		</Events>
 		<Properties>
 			<Property name="size" type="Dimension">
@@ -70,9 +91,13 @@
 									</LayoutConstraint>
 								</Constraints>
 								<Events>
+									<EventHandler event="mouseClicked" handler="lastEventsTableMouseClickedhandler method" listener="java.awt.event.MouseListener"/>
 								</Events>
 								<Properties>
 									<Property name="model"/>
+									<Property name="preferredSize" type="Dimension">
+										<Dimension value="[387, 207]"/>
+									</Property>
 								</Properties>
 								<SubComponents>
 									<Component class="javax.swing.table.JTableHeader" name="lastEventsTable.tableHeader">
@@ -118,7 +143,7 @@
 											</LayoutConstraint>
 										</Constraints>
 										<Properties>
-											<Property name="text" type="String" value="Task"/>
+											<Property name="text" type="String" value=""/>
 										</Properties>
 									</Component>
 									<Component class="javax.swing.JButton" name="newEntryButton">
@@ -130,6 +155,7 @@
 										</Constraints>
 										<Properties>
 											<Property name="text" type="String" value="Save"/>
+											<Property name="action"/>
 										</Properties>
 									</Component>
 								</SubComponents>
