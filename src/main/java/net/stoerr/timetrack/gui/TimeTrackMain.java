@@ -14,12 +14,14 @@ import javax.swing.AbstractAction;
 import javax.swing.JButton;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
+import javax.swing.JScrollPane;
 import javax.swing.JTabbedPane;
 import javax.swing.JTable;
 import javax.swing.JTextField;
 import javax.swing.SwingUtilities;
 import javax.swing.SwingWorker;
 import javax.swing.WindowConstants;
+import javax.swing.table.TableColumn;
 
 import net.stoerr.timetrack.controller.TimeEntryController;
 import net.stoerr.timetrack.entity.TimeEntry;
@@ -46,6 +48,8 @@ public class TimeTrackMain extends javax.swing.JFrame {
 
     static private JLabel taskLabel;
 
+    private JScrollPane eventScrollPane;
+
     private AbstractAction saveAction;
 
     private TimeEntryTableModel lastEventsTableModel;
@@ -70,19 +74,26 @@ public class TimeTrackMain extends javax.swing.JFrame {
     public static void main(String[] args) {
         SwingUtilities.invokeLater(new Runnable() {
             public void run() {
-                TimeTrackMain inst = new TimeTrackMain();
+                TimeEntryController controller = new TimeEntryController();
+                controller.startup();  // start hibernate now.
+                TimeTrackMain inst = new TimeTrackMain(controller);
                 inst.setLocationRelativeTo(null);
                 inst.setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
                 inst.setTitle("Time tracker HPS");
                 inst.setExtendedState(Frame.MAXIMIZED_BOTH);
-                inst.getController().startup(); // start hibernate now.
                 inst.setVisible(true);
             }
         });
     }
-
+    
     public TimeTrackMain() {
         super();
+        initGUI();        
+    }
+
+    public TimeTrackMain(TimeEntryController theController) {
+        super();
+        controller = theController;
         initGUI();
     }
 
@@ -123,20 +134,6 @@ public class TimeTrackMain extends javax.swing.JFrame {
                     newEventTab.setPreferredSize(new java.awt.Dimension(387,
                             225));
                     {
-                        lastEventsTableModel = new TimeEntryTableModel();
-                        lastEventsTable = new JTable();
-                        newEventTab.add(lastEventsTable, BorderLayout.CENTER);
-                        lastEventsTable.setModel(lastEventsTableModel);
-                        lastEventsTable
-                                .setPreferredSize(new java.awt.Dimension(387,
-                                        207));
-                        lastEventsTable.addMouseListener(new MouseAdapter() {
-                            public void mouseClicked(MouseEvent evt) {
-                                lastEventsTableMouseClicked(evt);
-                            }
-                        });
-                    }
-                    {
                         newEventPanel = new JPanel();
                         BorderLayout newEventPanelLayout = new BorderLayout();
                         newEventPanel.setLayout(newEventPanelLayout);
@@ -160,6 +157,26 @@ public class TimeTrackMain extends javax.swing.JFrame {
                             newEntryButton.setAction(getSaveAction());
                         }
                     }
+                    {
+                        eventScrollPane = new JScrollPane();
+                        newEventTab.add(eventScrollPane, BorderLayout.CENTER);
+                        {
+                            lastEventsTableModel = new TimeEntryTableModel();
+                            lastEventsTable = new JTable();
+                            eventScrollPane.setViewportView(lastEventsTable);
+                            lastEventsTable.setModel(lastEventsTableModel);
+                            lastEventsTable
+                                    .addMouseListener(new MouseAdapter() {
+                                        public void mouseClicked(MouseEvent evt) {
+                                            lastEventsTableMouseClicked(evt);
+                                        }
+                                    });
+                            TableColumn col = lastEventsTable.getColumnModel()
+                                    .getColumn(0);
+                            col.setMinWidth(150);
+                            col.setMaxWidth(150);
+                        }
+                    }
                 }
             }
             setSize(400, 300);
@@ -173,6 +190,11 @@ public class TimeTrackMain extends javax.swing.JFrame {
         List<TimeEntry> entries = getController().getEntries();
         getLastEventsTableModel().setEntries(entries);
         getLastEventsTableModel().fireTableDataChanged();
+        SwingUtilities.invokeLater(new Runnable() {
+            public void run() {
+                eventScrollPane.getVerticalScrollBar().setValue(10000);
+            };
+        });
     }
 
     void thisWindowActivated(WindowEvent evt) {
@@ -213,29 +235,29 @@ public class TimeTrackMain extends javax.swing.JFrame {
         }
         return saveAction;
     }
-    
+
     private void lastEventsTableMouseClicked(MouseEvent evt) {
-        System.out.println("lastEventsTable.mouseClicked, event="+evt);
+        System.out.println("lastEventsTable.mouseClicked, event=" + evt);
         int row = lastEventsTable.getSelectedRow();
-        getTaskField().setText(getLastEventsTableModel().getEntries().get(row).getTask());
+        getTaskField().setText(
+                getLastEventsTableModel().getEntries().get(row).getTask());
     }
-    
-    private void setupKill() 
-    {
+
+    private void setupKill() {
         new SwingWorker<Void, Void>() {
 
             @Override
             protected Void doInBackground() throws Exception {
-                Thread.sleep(15*1000*1000);
+                Thread.sleep(15 * 1000 * 1000);
                 return null;
             }
-            
+
             @Override
             protected void done() {
                 setVisible(false);
                 dispose();
             }
-            
+
         }.execute();
     }
 
