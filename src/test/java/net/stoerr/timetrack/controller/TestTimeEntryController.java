@@ -5,13 +5,16 @@
  */
 package net.stoerr.timetrack.controller;
 
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
 import java.util.Date;
 import java.util.List;
 
 import net.stoerr.functional.ParameterizedRunnable;
+import net.stoerr.timetrack.entity.ShortRandomIdGenerator;
 import net.stoerr.timetrack.entity.TimeEntry;
 
 import org.junit.AfterClass;
@@ -24,9 +27,6 @@ import org.junit.Test;
  */
 public class TestTimeEntryController {
 
-    /** Logger for TestTimeEntryController */
-    private static final org.apache.commons.logging.Log LOG = org.apache.commons.logging.LogFactory
-            .getLog(TestTimeEntryController.class);
     static TimeEntryController c;
 
     /**
@@ -61,7 +61,7 @@ public class TestTimeEntryController {
          * Same as c.getTransaction().begin(); c.createEntry(entry);
          * c.getTransaction().commit();
          */
-        assertTrue(0 != entry.getId());
+        assertNotNull(entry.getId());
         List<TimeEntry> entries = c.getEntries();
         assertFalse(entries.isEmpty());
         boolean found = false;
@@ -71,6 +71,16 @@ public class TestTimeEntryController {
             }
         }
         assertTrue(found);
+    }
+
+    @Test
+    public void testIDGen() {
+        ShortRandomIdGenerator gen = new ShortRandomIdGenerator();
+        for (int i = 0; i < 1000; ++i) {
+            String val = (String) gen.generate(null, null);
+            assertNotNull(val);
+            assertEquals(22, val.length());
+        }
     }
 
 }

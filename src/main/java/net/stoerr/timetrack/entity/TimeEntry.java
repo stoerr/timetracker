@@ -62,7 +62,10 @@ public class TimeEntry implements Serializable, Cloneable {
     }
 
     /**
+     * 
+     * 
      * @return the id
+     * 
      */
     @Id
     @AccessType("field")

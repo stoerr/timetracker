@@ -1,4 +1,4 @@
-#Wed Sep 24 15:42:03 CEST 2008
+#Thu Sep 25 13:02:39 CEST 2008
 eclipse.preferences.version=1
 editor_save_participant_org.eclipse.jdt.ui.postsavelistener.cleanup=true
 sp_cleanup.add_default_serial_version_id=true
@@ -43,7 +43,7 @@ sp_cleanup.remove_unused_private_fields=true
 sp_cleanup.remove_unused_private_members=false
 sp_cleanup.remove_unused_private_methods=true
 sp_cleanup.remove_unused_private_types=true
-sp_cleanup.sort_members=false
+sp_cleanup.sort_members=true
 sp_cleanup.sort_members_all=false
 sp_cleanup.use_blocks=true
 sp_cleanup.use_blocks_only_for_return_and_throw=false
