@@ -10,6 +10,7 @@ import javax.persistence.Id;
 import javax.persistence.Version;
 
 import org.hibernate.annotations.AccessType;
+import org.hibernate.annotations.GenericGenerator;
 
 /**
  * Ein Zeiteintrag
@@ -22,9 +23,12 @@ public class TimeEntry implements Serializable, Cloneable {
 
     private static final long serialVersionUID = -4477574737181050048L;
 
-    private long id;
+    private String id;
+
     private Date time;
+
     private String task;
+
     private Timestamp version;
 
     /**
@@ -62,8 +66,9 @@ public class TimeEntry implements Serializable, Cloneable {
      */
     @Id
     @AccessType("field")
-    @GeneratedValue
-    public long getId() {
+    @GeneratedValue(generator = "shortrandom")
+    @GenericGenerator(name = "shortrandom", strategy = "net.stoerr.timetrack.entity.ShortRandomIdGenerator")
+    public String getId() {
         return id;
     }
 
@@ -80,7 +85,7 @@ public class TimeEntry implements Serializable, Cloneable {
 
     @Override
     public int hashCode() {
-        return (int) (id % 2147482763);
+        return id.hashCode(); // (int) (id % 2147482763);
     }
 
     @Override
