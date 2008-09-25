@@ -21,12 +21,6 @@ import net.stoerr.timetrack.entity.TimeEntry;
  */
 public class TimeEntryController {
 
-    /** Logger for TimeEntryController */
-    private static final org.apache.commons.logging.Log LOG = org.apache.commons.logging.LogFactory
-            .getLog(TimeEntryController.class);
-
-    private static boolean initialized = false;
-
     /** The emfactory is only created when emfactory is first accessed. */
     @SuppressWarnings("synthetic-access")
     private static class EMFHelper {
@@ -37,8 +31,18 @@ public class TimeEntryController {
         }
     }
 
+    /** Logger for TimeEntryController */
+    private static final org.apache.commons.logging.Log LOG = org.apache.commons.logging.LogFactory
+            .getLog(TimeEntryController.class);
+
+    private static boolean initialized = false;
+
     private static EntityManager getEntityManager() {
         return EMFHelper.emanager;
+    }
+
+    public void createEntry(TimeEntry entry) {
+        getEntityManager().persist(entry);
     }
 
     @SuppressWarnings("unchecked")
@@ -46,8 +50,8 @@ public class TimeEntryController {
         return getEntityManager().createQuery("from TimeEntry order by time").getResultList();
     }
 
-    public void createEntry(TimeEntry entry) {
-        getEntityManager().persist(entry);
+    public EntityTransaction getTransaction() {
+        return getEntityManager().getTransaction();
     }
 
     public void shutdown() {
@@ -56,8 +60,8 @@ public class TimeEntryController {
         }
     }
 
-    public EntityTransaction getTransaction() {
-        return getEntityManager().getTransaction();
+    public void startup() {
+        EMFHelper.emfactory.isOpen();
     }
 
     @SuppressWarnings("null")

@@ -2,14 +2,21 @@ package net.stoerr.timetrack.gui;
 
 import java.awt.BorderLayout;
 import java.awt.Frame;
-import java.awt.GridLayout;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
+import java.util.List;
 
-import javax.swing.*;
-import javax.swing.table.DefaultTableModel;
-import javax.swing.table.TableModel;
+import javax.swing.JButton;
+import javax.swing.JLabel;
+import javax.swing.JPanel;
+import javax.swing.JTabbedPane;
+import javax.swing.JTable;
+import javax.swing.JTextField;
+import javax.swing.SwingUtilities;
+import javax.swing.WindowConstants;
+
 import net.stoerr.timetrack.controller.TimeEntryController;
+import net.stoerr.timetrack.entity.TimeEntry;
 
 /**
  * This code was edited or generated using CloudGarden's Jigloo SWT/Swing GUI
@@ -22,12 +29,16 @@ import net.stoerr.timetrack.controller.TimeEntryController;
  * ANY CORPORATE OR COMMERCIAL PURPOSE.
  */
 public class TimeTrackMain extends javax.swing.JFrame {
+
+    /** Logger for TimeTrackMain */
+    private static final org.apache.log4j.Logger LOG = org.apache.log4j.Logger.getLogger(TimeTrackMain.class);
+
     static private JTabbedPane tabPane;
 
     static private JTable lastEventsTable;
 
     static private JLabel taskLabel;
-    private DefaultTableModel lastEventsTableModel;
+    private TimeEntryTableModel lastEventsTableModel;
     private TimeEntryController controller;
 
     static private JButton newEntryButton;
@@ -37,6 +48,10 @@ public class TimeTrackMain extends javax.swing.JFrame {
     static private JPanel newEventTab;
 
     static private JPanel newEventPanel;
+
+    public static JTextField getTaskField() {
+        return taskField;
+    }
 
     /**
      * Auto-generated main method to display this JFrame
@@ -49,6 +64,7 @@ public class TimeTrackMain extends javax.swing.JFrame {
                 inst.setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
                 inst.setTitle("Time tracker HPS");
                 inst.setExtendedState(Frame.MAXIMIZED_BOTH);
+                inst.getController().startup(); // start hibernate now.
                 inst.setVisible(true);
             }
         });
@@ -59,10 +75,27 @@ public class TimeTrackMain extends javax.swing.JFrame {
         initGUI();
     }
 
+    public TimeEntryController getController() {
+        if (controller == null) {
+            controller = new TimeEntryController();
+        }
+        return controller;
+    }
+
+    public TimeEntryTableModel getLastEventsTableModel() {
+        return lastEventsTableModel;
+    }
+
     private void initGUI() {
         try {
             {
                 this.addWindowListener(new WindowAdapter() {
+                    @Override
+                    public void windowActivated(WindowEvent evt) {
+                        thisWindowActivated(evt);
+                    }
+
+                    @Override
                     public void windowClosed(WindowEvent evt) {
                         thisWindowClosed(evt);
                     }
@@ -76,16 +109,13 @@ public class TimeTrackMain extends javax.swing.JFrame {
                     tabPane.addTab("new", null, newEventTab, null);
                     BorderLayout newEventTabLayout = new BorderLayout();
                     newEventTab.setLayout(newEventTabLayout);
-                    newEventTab.setPreferredSize(new java.awt.Dimension(387,
-                            225));
+                    newEventTab.setPreferredSize(new java.awt.Dimension(387, 225));
                     {
-                        lastEventsTableModel = new DefaultTableModel(
-                                new String[][] { { "One", "Two" },
-                                        { "Three", "Four" } }, new String[] {
-                                        "Column 1", "Column 2" });
+                        lastEventsTableModel = new TimeEntryTableModel();
                         lastEventsTable = new JTable();
                         newEventTab.add(lastEventsTable, BorderLayout.CENTER);
                         lastEventsTable.setModel(lastEventsTableModel);
+                        lastEventsTable.setPreferredSize(new java.awt.Dimension(387, 207));
                     }
                     {
                         newEventPanel = new JPanel();
@@ -99,14 +129,12 @@ public class TimeTrackMain extends javax.swing.JFrame {
                         }
                         {
                             taskField = new JTextField();
-                            newEventPanel.add(getTaskField(),
-                                    BorderLayout.CENTER);
+                            newEventPanel.add(getTaskField(), BorderLayout.CENTER);
                             taskField.setText("Task");
                         }
                         {
                             newEntryButton = new JButton();
-                            newEventPanel
-                                    .add(newEntryButton, BorderLayout.EAST);
+                            newEventPanel.add(newEntryButton, BorderLayout.EAST);
                             newEntryButton.setText("Save");
                         }
                     }
@@ -114,23 +142,24 @@ public class TimeTrackMain extends javax.swing.JFrame {
             }
             setSize(400, 300);
         } catch (Exception e) {
-            e.printStackTrace();
+            LOG.error(e, e);
         }
     }
 
-    public static JTextField getTaskField() {
-        return taskField;
+    void thisWindowActivated(WindowEvent evt) {
+        LOG.info("this.windowActivated, event=" + evt);
+        SwingUtilities.invokeLater(new Runnable() {
+            @Override
+            public void run() {
+                List<TimeEntry> entries = getController().getEntries();
+                getLastEventsTableModel().setEntries(entries);
+            }
+        });
     }
 
-    private void thisWindowClosed(WindowEvent evt) {
+    void thisWindowClosed(WindowEvent evt) {
+        LOG.info("Shutdown. " + evt);
         getController().shutdown();
-    }
-    
-    public TimeEntryController getController() {
-        if(controller == null) {
-            controller = new TimeEntryController();
-        }
-        return controller;
     }
 
 }
