@@ -13,7 +13,7 @@ import static org.junit.Assert.assertTrue;
 import java.util.Date;
 import java.util.List;
 
-import net.stoerr.functional.ParameterizedRunnable;
+import net.stoerr.functional.Runnable1;
 import net.stoerr.timetrack.entity.ShortRandomIdGenerator;
 import net.stoerr.timetrack.entity.TimeEntry;
 
@@ -50,7 +50,7 @@ public class TestTimeEntryController {
         TimeEntry entry = new TimeEntry();
         final String taskName = "Testtask " + new Date();
         entry.setTask(taskName);
-        ParameterizedRunnable<TimeEntry> run = new ParameterizedRunnable<TimeEntry>(entry) {
+        Runnable1<TimeEntry> run = new Runnable1<TimeEntry>(entry) {
             @Override
             public void run() {
                 c.createEntry(val);
