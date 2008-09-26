@@ -11,6 +11,7 @@ import javax.persistence.Version;
 
 import org.hibernate.annotations.AccessType;
 import org.hibernate.annotations.GenericGenerator;
+import org.hibernate.annotations.Index;
 
 /**
  * Ein Zeiteintrag
@@ -34,6 +35,7 @@ public class TimeEntry implements Serializable, Cloneable {
     /**
      * @return the time
      */
+    @Index(name="entrytimeind")
     public Date getTime() {
         return time;
     }
@@ -49,6 +51,7 @@ public class TimeEntry implements Serializable, Cloneable {
     /**
      * @return the task
      */
+    @Index(name="entrytaskind")
     public String getTask() {
         return task;
     }
