@@ -9,8 +9,8 @@ import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.util.Date;
 import java.util.List;
-import javax.swing.AbstractAction;
 
+import javax.swing.AbstractAction;
 import javax.swing.JButton;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
@@ -38,35 +38,11 @@ import net.stoerr.timetrack.entity.TimeEntry;
  */
 public class TimeTrackMain extends javax.swing.JFrame {
 
+    /** SUID */
+    private static final long serialVersionUID = 8552907221005431441L;
+
     /** Logger for TimeTrackMain */
-    private static final org.apache.log4j.Logger LOG = org.apache.log4j.Logger
-            .getLogger(TimeTrackMain.class);
-
-    static private JTabbedPane tabPane;
-
-    static private JTable lastEventsTable;
-
-    static private JLabel taskLabel;
-
-    private JScrollPane eventScrollPane;
-
-    private AbstractAction saveAction;
-
-    private TimeEntryTableModel lastEventsTableModel;
-
-    private TimeEntryController controller;
-
-    static private JButton newEntryButton;
-
-    static private JTextField taskField;
-
-    static private JPanel newEventTab;
-
-    static private JPanel newEventPanel;
-
-    public static JTextField getTaskField() {
-        return taskField;
-    }
+    private static final org.apache.log4j.Logger LOG = org.apache.log4j.Logger.getLogger(TimeTrackMain.class);
 
     /**
      * Auto-generated main method to display this JFrame
@@ -75,7 +51,7 @@ public class TimeTrackMain extends javax.swing.JFrame {
         SwingUtilities.invokeLater(new Runnable() {
             public void run() {
                 TimeEntryController controller = new TimeEntryController();
-                controller.startup();  // start hibernate now.
+                controller.startup(); // start hibernate now.
                 TimeTrackMain inst = new TimeTrackMain(controller);
                 inst.setLocationRelativeTo(null);
                 inst.setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
@@ -85,10 +61,32 @@ public class TimeTrackMain extends javax.swing.JFrame {
             }
         });
     }
-    
+
+    private JTabbedPane tabPane;
+
+    private JTable lastEventsTable;
+
+    private JLabel taskLabel;
+
+    private JScrollPane eventScrollPane;
+
+    private AbstractAction saveAction;
+
+    private TimeEntryTableModel lastEventsTableModel;
+
+    private TimeEntryController controller;
+
+    private JButton newEntryButton;
+
+    private JTextField taskField;
+
+    private JPanel newEventTab;
+
+    private JPanel newEventPanel;
+
     public TimeTrackMain() {
         super();
-        initGUI();        
+        initGUI();
     }
 
     public TimeTrackMain(TimeEntryController theController) {
@@ -108,6 +106,21 @@ public class TimeTrackMain extends javax.swing.JFrame {
         return lastEventsTableModel;
     }
 
+    private AbstractAction getSaveAction() {
+        if (saveAction == null) {
+            saveAction = new AbstractAction("Save", null) {
+                public void actionPerformed(ActionEvent evt) {
+                    save();
+                }
+            };
+        }
+        return saveAction;
+    }
+
+    public JTextField getTaskField() {
+        return taskField;
+    }
+
     private void initGUI() {
         try {
             {
@@ -119,6 +132,13 @@ public class TimeTrackMain extends javax.swing.JFrame {
 
                     @Override
                     public void windowClosed(WindowEvent evt) {
+                        LOG.info("windowClosed");
+                        thisWindowClosed(evt);
+                    }
+
+                    @Override
+                    public void windowClosing(WindowEvent evt) {
+                        LOG.info("windowClosing");
                         thisWindowClosed(evt);
                     }
                 });
@@ -131,8 +151,7 @@ public class TimeTrackMain extends javax.swing.JFrame {
                     tabPane.addTab("new", null, newEventTab, null);
                     BorderLayout newEventTabLayout = new BorderLayout();
                     newEventTab.setLayout(newEventTabLayout);
-                    newEventTab.setPreferredSize(new java.awt.Dimension(387,
-                            225));
+                    newEventTab.setPreferredSize(new java.awt.Dimension(387, 225));
                     {
                         newEventPanel = new JPanel();
                         BorderLayout newEventPanelLayout = new BorderLayout();
@@ -145,14 +164,12 @@ public class TimeTrackMain extends javax.swing.JFrame {
                         }
                         {
                             taskField = new JTextField();
-                            newEventPanel.add(getTaskField(),
-                                    BorderLayout.CENTER);
+                            newEventPanel.add(getTaskField(), BorderLayout.CENTER);
                             taskField.setText("");
                         }
                         {
                             newEntryButton = new JButton();
-                            newEventPanel
-                                    .add(newEntryButton, BorderLayout.EAST);
+                            newEventPanel.add(newEntryButton, BorderLayout.EAST);
                             newEntryButton.setText("Save");
                             newEntryButton.setAction(getSaveAction());
                         }
@@ -165,14 +182,13 @@ public class TimeTrackMain extends javax.swing.JFrame {
                             lastEventsTable = new JTable();
                             eventScrollPane.setViewportView(lastEventsTable);
                             lastEventsTable.setModel(lastEventsTableModel);
-                            lastEventsTable
-                                    .addMouseListener(new MouseAdapter() {
-                                        public void mouseClicked(MouseEvent evt) {
-                                            lastEventsTableMouseClicked(evt);
-                                        }
-                                    });
-                            TableColumn col = lastEventsTable.getColumnModel()
-                                    .getColumn(0);
+                            lastEventsTable.addMouseListener(new MouseAdapter() {
+                                @Override
+                                public void mouseClicked(MouseEvent evt) {
+                                    lastEventsTableMouseClicked(evt);
+                                }
+                            });
+                            TableColumn col = lastEventsTable.getColumnModel().getColumn(0);
                             col.setMinWidth(150);
                             col.setMaxWidth(150);
                         }
@@ -186,6 +202,12 @@ public class TimeTrackMain extends javax.swing.JFrame {
         }
     }
 
+    private void lastEventsTableMouseClicked(MouseEvent evt) {
+        System.out.println("lastEventsTable.mouseClicked, event=" + evt);
+        int row = lastEventsTable.getSelectedRow();
+        getTaskField().setText(getLastEventsTableModel().getEntries().get(row).getTask());
+    }
+
     public void refresh() {
         List<TimeEntry> entries = getController().getEntries();
         getLastEventsTableModel().setEntries(entries);
@@ -197,21 +219,6 @@ public class TimeTrackMain extends javax.swing.JFrame {
         });
     }
 
-    void thisWindowActivated(WindowEvent evt) {
-        LOG.info("this.windowActivated, event=" + evt);
-        SwingUtilities.invokeLater(new Runnable() {
-            @Override
-            public void run() {
-                refresh();
-            }
-        });
-    }
-
-    void thisWindowClosed(WindowEvent evt) {
-        LOG.info("Shutdown. " + evt);
-        getController().shutdown();
-    }
-
     public void save() {
         final String text = getTaskField().getText();
         if (null != text && !"".equals(text.trim())) {
@@ -221,26 +228,9 @@ public class TimeTrackMain extends javax.swing.JFrame {
             getController().getTransaction().begin();
             getController().createEntry(entry);
             getController().getTransaction().commit();
+            getController().flushDB();
         }
         refresh();
-    }
-
-    private AbstractAction getSaveAction() {
-        if (saveAction == null) {
-            saveAction = new AbstractAction("Save", null) {
-                public void actionPerformed(ActionEvent evt) {
-                    save();
-                }
-            };
-        }
-        return saveAction;
-    }
-
-    private void lastEventsTableMouseClicked(MouseEvent evt) {
-        System.out.println("lastEventsTable.mouseClicked, event=" + evt);
-        int row = lastEventsTable.getSelectedRow();
-        getTaskField().setText(
-                getLastEventsTableModel().getEntries().get(row).getTask());
     }
 
     private void setupKill() {
@@ -259,6 +249,21 @@ public class TimeTrackMain extends javax.swing.JFrame {
             }
 
         }.execute();
+    }
+
+    void thisWindowActivated(WindowEvent evt) {
+        LOG.info("this.windowActivated, event=" + evt);
+        SwingUtilities.invokeLater(new Runnable() {
+            @Override
+            public void run() {
+                refresh();
+            }
+        });
+    }
+
+    void thisWindowClosed(WindowEvent evt) {
+        LOG.info("Shutdown. " + evt);
+        getController().shutdown();
     }
 
 }
