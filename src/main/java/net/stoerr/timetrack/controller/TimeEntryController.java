@@ -9,10 +9,14 @@ import javax.persistence.Persistence;
 
 import net.stoerr.timetrack.entity.TimeEntry;
 
+import org.hibernate.Transaction;
+import org.hibernate.classic.Session;
+import org.hibernate.ejb.HibernateEntityManagerFactory;
+
 /**
  * Controller für die Operationen an TimeEntries.
  * 
- * @see http
+ * @see http 
  *      ://www.hibernate.org/hib_docs/entitymanager/reference/en/html/queryhql
  *      .html
  * 
@@ -45,18 +49,25 @@ public class TimeEntryController {
         return emanager;
     }
 
-    public void TimeEntryController() {
-        // empty
-    }
-
     public void createEntry(TimeEntry entry) {
         getEntityManager().persist(entry);
     }
 
+    /**
+     * Flushes the DB to disk.
+     */
+    public void flushDB() {
+        LOG.info("Flushing");
+        Session session = ((HibernateEntityManagerFactory) emfactory).getSessionFactory().openSession();
+        Transaction trans = session.beginTransaction();
+        session.createSQLQuery("CHECKPOINT").executeUpdate();
+        trans.commit();
+        session.close();
+    }
+
     @SuppressWarnings("unchecked")
     public List<TimeEntry> getEntries() {
-        final List resultList = getEntityManager().createQuery("from TimeEntry order by time")
-                        .getResultList();
+        final List resultList = getEntityManager().createQuery("from TimeEntry order by time").getResultList();
         return resultList;
     }
 
@@ -71,7 +82,11 @@ public class TimeEntryController {
     }
 
     public void startup() {
-        getEntries();        
+        getEntries();
+    }
+
+    public void TimeEntryController() {
+        // empty
     }
 
     @SuppressWarnings("null")
