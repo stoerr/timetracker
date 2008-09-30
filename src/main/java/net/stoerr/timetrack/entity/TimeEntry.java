@@ -22,7 +22,7 @@ import org.hibernate.annotations.Index;
 @Entity
 public class TimeEntry implements Serializable, Cloneable {
 
-    private static final long serialVersionUID = -4477574737181050048L;
+    private static final long serialVersionUID = -5717515642220659858L;
 
     private String id;
 
@@ -30,52 +30,50 @@ public class TimeEntry implements Serializable, Cloneable {
 
     private String task;
 
+    private Float hours;
+
     private Timestamp version;
 
-    /**
-     * @return the time
-     */
-    @Index(name="entrytimeind")
-    public Date getTime() {
-        return time;
+    @Override
+    public Object clone() throws CloneNotSupportedException {
+        try {
+            return super.clone();
+        } catch (CloneNotSupportedException e) { // impossible
+            throw new RuntimeException(e);
+        }
     }
 
     /**
-     * @param time
-     *            the time to set
-     */
-    public void setTime(Date time) {
-        this.time = time;
-    }
-
-    /**
-     * @return the task
-     */
-    @Index(name="entrytaskind")
-    public String getTask() {
-        return task;
-    }
-
-    /**
-     * @param task
-     *            the task to set
-     */
-    public void setTask(String task) {
-        this.task = task;
-    }
-
-    /**
+     * Hours we worked on the task
      * 
-     * 
-     * @return the id
-     * 
+     * @return the hours
      */
+    public Float getHours() {
+        return hours;
+    }
+
     @Id
     @AccessType("field")
     @GeneratedValue(generator = "shortrandom")
     @GenericGenerator(name = "shortrandom", strategy = "net.stoerr.timetrack.entity.ShortRandomIdGenerator")
     public String getId() {
         return id;
+    }
+
+    /**
+     * @return the task
+     */
+    @Index(name = "entrytaskind")
+    public String getTask() {
+        return task;
+    }
+
+    /**
+     * @return the time
+     */
+    @Index(name = "entrytimeind")
+    public Date getTime() {
+        return time;
     }
 
     /**
@@ -94,13 +92,28 @@ public class TimeEntry implements Serializable, Cloneable {
         return id.hashCode(); // (int) (id % 2147482763);
     }
 
-    @Override
-    public Object clone() throws CloneNotSupportedException {
-        try {
-            return super.clone();
-        } catch (CloneNotSupportedException e) { // impossible
-            throw new RuntimeException(e);
-        }
+    /**
+     * @param hours
+     *            the hours to set
+     */
+    public void setHours(Float hours) {
+        this.hours = hours;
+    }
+
+    /**
+     * @param task
+     *            the task to set
+     */
+    public void setTask(String task) {
+        this.task = task;
+    }
+
+    /**
+     * @param time
+     *            the time to set
+     */
+    public void setTime(Date time) {
+        this.time = time;
     }
 
 }

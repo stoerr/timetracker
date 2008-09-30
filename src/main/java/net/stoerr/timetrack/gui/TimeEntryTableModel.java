@@ -1,9 +1,7 @@
 package net.stoerr.timetrack.gui;
 
-import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.Collections;
-import java.util.Date;
 import java.util.List;
 import java.util.Locale;
 
@@ -23,11 +21,11 @@ public class TimeEntryTableModel extends AbstractTableModel {
 
     private List<TimeEntry> entries = Collections.emptyList();
 
-    private SimpleDateFormat format = new SimpleDateFormat("EE dd.MM.yy HH:mm", Locale.GERMANY);
+    private final SimpleDateFormat format = new SimpleDateFormat("EE dd.MM.yy HH:mm", Locale.GERMANY);
 
     @Override
     public int getColumnCount() {
-        return 2;
+        return 3;
     }
 
     /*
@@ -41,6 +39,8 @@ public class TimeEntryTableModel extends AbstractTableModel {
         case 0:
             return "Time";
         case 1:
+            return "Hours";
+        case 2:
             return "Task";
         default:
             throw new ArrayIndexOutOfBoundsException(column);
@@ -68,9 +68,16 @@ public class TimeEntryTableModel extends AbstractTableModel {
         case 0:
             if (null != entry.getTime()) {
                 return format.format(entry.getTime());
-            } else
+            } else {
                 return null;
+            }
         case 1:
+            if (null != entry.getHours()) {
+                return entry.getHours();
+            } else {
+                return "";
+            }
+        case 2:
             return entry.getTask();
         default:
             throw new ArrayIndexOutOfBoundsException(column);
