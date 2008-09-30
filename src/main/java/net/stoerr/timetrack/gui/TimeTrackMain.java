@@ -191,6 +191,9 @@ public class TimeTrackMain extends javax.swing.JFrame {
                             TableColumn col = lastEventsTable.getColumnModel().getColumn(0);
                             col.setMinWidth(150);
                             col.setMaxWidth(150);
+                            col = lastEventsTable.getColumnModel().getColumn(1);
+                            col.setMinWidth(100);
+                            col.setMaxWidth(100);
                         }
                     }
                 }
@@ -225,6 +228,7 @@ public class TimeTrackMain extends javax.swing.JFrame {
             TimeEntry entry = new TimeEntry();
             entry.setTask(text.trim());
             entry.setTime(new Date());
+            entry.setHours(0.5f);
             getController().getTransaction().begin();
             getController().createEntry(entry);
             getController().getTransaction().commit();
