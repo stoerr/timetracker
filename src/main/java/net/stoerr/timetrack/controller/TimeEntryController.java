@@ -1,12 +1,15 @@
 package net.stoerr.timetrack.controller;
 
+import java.util.Date;
 import java.util.List;
 
 import javax.persistence.EntityManager;
 import javax.persistence.EntityManagerFactory;
 import javax.persistence.EntityTransaction;
 import javax.persistence.Persistence;
+import javax.persistence.Query;
 
+import net.stoerr.timetrack.TimeTrackConstants;
 import net.stoerr.timetrack.entity.TimeEntry;
 
 import org.hibernate.Transaction;
@@ -23,7 +26,7 @@ import org.hibernate.ejb.HibernateEntityManagerFactory;
  * @author hps
  * @since 24.09.2008
  */
-public class TimeEntryController {
+public class TimeEntryController implements TimeTrackConstants {
 
     /** Logger for TimeEntryController */
     private static final org.apache.commons.logging.Log LOG = org.apache.commons.logging.LogFactory
@@ -49,6 +52,10 @@ public class TimeEntryController {
         return emanager;
     }
 
+    public TimeEntryController() {
+        // empty
+    }
+
     public void createEntry(TimeEntry entry) {
         getEntityManager().persist(entry);
     }
@@ -67,12 +74,48 @@ public class TimeEntryController {
 
     @SuppressWarnings("unchecked")
     public List<TimeEntry> getEntries() {
-        final List resultList = getEntityManager().createQuery("from TimeEntry order by time").getResultList();
+        final List<TimeEntry> resultList = getEntityManager().createQuery("from TimeEntry order by time").getResultList();
         return resultList;
     }
 
     public EntityTransaction getTransaction() {
         return getEntityManager().getTransaction();
+    }
+
+    /**
+     * Speichert eine halbe Stinde
+     * 
+     * @param task
+     */
+    @SuppressWarnings("unchecked")
+    public TimeEntry saveAction(String task) {
+        TimeEntry entry;
+        getTransaction().begin();
+        Date time = new Date();
+        Query query = getEntityManager().createQuery(
+                "from TimeEntry t where t.task=:task and t.time>:daystart order by time desc");
+        query.setParameter("task", task);
+        long timeDaystart = (time.getTime() / 86400000) * 86400000;
+        Date daystart = new Date(timeDaystart);
+        query.setParameter("daystart", daystart);
+        List<TimeEntry> haveEntries = query.getResultList();
+        if (haveEntries.isEmpty()) {
+            entry = new TimeEntry();
+            entry.setTask(task.trim());
+            entry.setTime(time);
+            entry.setHours(HOUR_GRANULARITY);
+            createEntry(entry);
+        } else {
+            entry = haveEntries.get(0);
+            Float hours = entry.getHours();
+            if (null == hours || 0 == hours) {
+                hours = HOUR_GRANULARITY;
+            }
+            entry.setHours(hours + HOUR_GRANULARITY);
+        }
+        getTransaction().commit();
+        flushDB();
+        return entry;
     }
 
     public void shutdown() {
@@ -83,10 +126,6 @@ public class TimeEntryController {
 
     public void startup() {
         getEntries();
-    }
-
-    public void TimeEntryController() {
-        // empty
     }
 
     @SuppressWarnings("null")

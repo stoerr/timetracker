@@ -112,8 +112,13 @@ public class TimeEntry implements Serializable, Cloneable {
      * @param time
      *            the time to set
      */
-    public void setTime(Date time) {
+    public void setTime(final Date time) {
         this.time = time;
+    }
+
+    @Override
+    public String toString() {
+        return "TimeEntry{" + id + ":" + task + "," + hours + "," + time + "@" + version + "}";
     }
 
 }
