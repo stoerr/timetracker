@@ -7,7 +7,6 @@ import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
-import java.util.Date;
 import java.util.List;
 
 import javax.swing.AbstractAction;
@@ -68,7 +67,7 @@ public class TimeTrackMain extends javax.swing.JFrame {
 
     private JLabel taskLabel;
 
-    private JScrollPane eventScrollPane;
+    JScrollPane eventScrollPane;
 
     private AbstractAction saveAction;
 
@@ -218,21 +217,14 @@ public class TimeTrackMain extends javax.swing.JFrame {
         SwingUtilities.invokeLater(new Runnable() {
             public void run() {
                 eventScrollPane.getVerticalScrollBar().setValue(10000);
-            };
+            }
         });
     }
 
     public void save() {
         final String text = getTaskField().getText();
         if (null != text && !"".equals(text.trim())) {
-            TimeEntry entry = new TimeEntry();
-            entry.setTask(text.trim());
-            entry.setTime(new Date());
-            entry.setHours(0.5f);
-            getController().getTransaction().begin();
-            getController().createEntry(entry);
-            getController().getTransaction().commit();
-            getController().flushDB();
+            getController().saveAction(text);
         }
         refresh();
     }

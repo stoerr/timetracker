@@ -13,7 +13,7 @@ import static org.junit.Assert.assertTrue;
 import java.util.Date;
 import java.util.List;
 
-import net.stoerr.functional.Runnable1;
+import net.stoerr.timetrack.TimeTrackConstants;
 import net.stoerr.timetrack.entity.ShortRandomIdGenerator;
 import net.stoerr.timetrack.entity.TimeEntry;
 
@@ -25,7 +25,7 @@ import org.junit.Test;
  * @author hps
  * @since 24.09.2008
  */
-public class TestTimeEntryController {
+public class TestTimeEntryController implements TimeTrackConstants {
 
     static TimeEntryController c;
 
@@ -45,23 +45,29 @@ public class TestTimeEntryController {
         c.shutdown();
     }
 
-    @Test
-    public void testCreate() {
-        TimeEntry entry = new TimeEntry();
-        final String taskName = "Testtask " + new Date();
-        entry.setTask(taskName);
-        Runnable1<TimeEntry> run = new Runnable1<TimeEntry>(entry) {
-            @Override
-            public void run() {
-                c.createEntry(val);
-            }
-        };
-        c.wrapTransaction(run);
+    /**
+     * @param taskName
+     */
+    private void createTask(final String taskName) {
+        /**
+         * Runnable2<String, TimeEntry> run = new Runnable2<String,
+         * TimeEntry>(taskName) {
+         * 
+         * @Override public void run() { val2 = c.saveAction(val); } };
+         *           c.wrapTransaction(run);
+         */
+        TimeEntry entry = c.saveAction(taskName);
+        assertNotNull(entry.getId());
         /*
          * Same as c.getTransaction().begin(); c.createEntry(entry);
          * c.getTransaction().commit();
          */
-        assertNotNull(entry.getId());
+    }
+
+    @Test
+    public void testCreate() {
+        final String taskName = "Testtask " + new Date();
+        createTask(taskName);
         List<TimeEntry> entries = c.getEntries();
         assertFalse(entries.isEmpty());
         boolean found = false;
@@ -81,6 +87,25 @@ public class TestTimeEntryController {
             assertNotNull(val);
             assertEquals(22, val.length());
         }
+    }
+
+    @Test
+    public void testRaiseTime() {
+        String taskName = "Raisingtest " + new Date();
+        createTask(taskName);
+        createTask(taskName);
+        createTask(taskName);
+        List<TimeEntry> entries = c.getEntries();
+        assertFalse(entries.isEmpty());
+        boolean found = false;
+        for (TimeEntry timeEntry : entries) {
+            if (taskName.equals(timeEntry.getTask())) {
+                found = true;
+                System.out.println(timeEntry);
+                assertEquals(timeEntry.toString(), 3 * HOUR_GRANULARITY, timeEntry.getHours().floatValue(), 1e-6);
+            }
+        }
+        assertTrue(found);
     }
 
 }
