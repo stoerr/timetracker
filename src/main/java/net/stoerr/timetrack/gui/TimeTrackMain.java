@@ -41,7 +41,7 @@ public class TimeTrackMain extends javax.swing.JFrame {
     private static final long serialVersionUID = 8552907221005431441L;
 
     /** Logger for TimeTrackMain */
-    private static final org.apache.log4j.Logger LOG = org.apache.log4j.Logger.getLogger(TimeTrackMain.class);
+    static final org.apache.log4j.Logger LOG = org.apache.log4j.Logger.getLogger(TimeTrackMain.class);
 
     /**
      * Auto-generated main method to display this JFrame
@@ -105,6 +105,7 @@ public class TimeTrackMain extends javax.swing.JFrame {
         return lastEventsTableModel;
     }
 
+    @SuppressWarnings("serial")
     private AbstractAction getSaveAction() {
         if (saveAction == null) {
             saveAction = new AbstractAction("Save", null) {
@@ -204,7 +205,7 @@ public class TimeTrackMain extends javax.swing.JFrame {
         }
     }
 
-    private void lastEventsTableMouseClicked(MouseEvent evt) {
+    void lastEventsTableMouseClicked(MouseEvent evt) {
         System.out.println("lastEventsTable.mouseClicked, event=" + evt);
         int row = lastEventsTable.getSelectedRow();
         getTaskField().setText(getLastEventsTableModel().getEntries().get(row).getTask());
