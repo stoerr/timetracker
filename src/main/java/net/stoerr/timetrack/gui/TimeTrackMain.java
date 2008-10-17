@@ -57,6 +57,7 @@ public class TimeTrackMain extends javax.swing.JFrame {
                 inst.setTitle("Time tracker HPS");
                 inst.setExtendedState(Frame.MAXIMIZED_BOTH);
                 inst.setVisible(true);
+                inst.setAlwaysOnTop(true);
             }
         });
     }
