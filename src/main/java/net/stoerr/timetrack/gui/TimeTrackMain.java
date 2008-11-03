@@ -26,6 +26,8 @@ import javax.swing.SwingWorker;
 import javax.swing.WindowConstants;
 import javax.swing.table.TableColumn;
 
+import sun.swing.SwingUtilities2;
+
 import net.stoerr.timetrack.controller.TimeEntryController;
 import net.stoerr.timetrack.entity.TimeEntry;
 
@@ -339,10 +341,56 @@ public class TimeTrackMain extends javax.swing.JFrame {
         getController().shutdown();
     }
 
+    public static final int COUNTDOWN_SECONDS = 10;
+
+    private CountdownWorker countdown = null;
+
+    private class CountdownWorker extends SwingWorker<Void, Integer> {
+
+        @Override
+        protected Void doInBackground() throws Exception {
+            for (int i = 0; i < COUNTDOWN_SECONDS; ++i) {
+                publish(COUNTDOWN_SECONDS - i);
+                Thread.sleep(1000);
+            }
+            return null;
+        }
+
+        @Override
+        protected void process(List<Integer> arg0) {
+            countdownLabel.setText("Countdown : " + arg0.get(0));
+        }
+
+        @Override
+        protected void done() {
+            if (!isCancelled()) {
+                countdownLabel.setText("Shutdown in progress");
+                TimeTrackMain.this.dispose();
+                /* SwingUtilities.invokeLater(new Runnable() {
+
+                    public void run() {
+                        try {
+                            Thread.sleep(1000);
+                        } catch (InterruptedException e) {
+                            LOG.error(e, e);
+                        }
+                        System.exit(0);
+                    }
+                }); */
+            }
+        }
+
+    }
+
     public AbstractAction getCountdownAction() {
         if (countdownAction == null) {
             countdownAction = new AbstractAction("Countdown and Close", null) {
                 public void actionPerformed(ActionEvent evt) {
+                    if (null == countdown) {
+                        tabPane.setSelectedComponent(countDownPane);
+                        countdown = new CountdownWorker();
+                        countdown.execute();
+                    }
                 }
             };
         }
@@ -353,6 +401,11 @@ public class TimeTrackMain extends javax.swing.JFrame {
         if (stopCountdownAction == null) {
             stopCountdownAction = new AbstractAction("Stop Countdown", null) {
                 public void actionPerformed(ActionEvent evt) {
+                    if (null != countdown) {
+                        countdown.cancel(true);
+                        countdown = null;
+                        countdownLabel.setText("Countdown");
+                    }
                 }
             };
         }
