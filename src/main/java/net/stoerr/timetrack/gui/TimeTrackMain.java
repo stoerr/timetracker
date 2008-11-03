@@ -1,8 +1,10 @@
 package net.stoerr.timetrack.gui;
 
 import java.awt.BorderLayout;
+import java.awt.FlowLayout;
 import java.awt.Frame;
 import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.awt.event.WindowAdapter;
@@ -10,6 +12,7 @@ import java.awt.event.WindowEvent;
 import java.util.List;
 
 import javax.swing.AbstractAction;
+import javax.swing.BoxLayout;
 import javax.swing.JButton;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
@@ -17,6 +20,7 @@ import javax.swing.JScrollPane;
 import javax.swing.JTabbedPane;
 import javax.swing.JTable;
 import javax.swing.JTextField;
+import javax.swing.SwingConstants;
 import javax.swing.SwingUtilities;
 import javax.swing.SwingWorker;
 import javax.swing.WindowConstants;
@@ -41,7 +45,8 @@ public class TimeTrackMain extends javax.swing.JFrame {
     private static final long serialVersionUID = 8552907221005431441L;
 
     /** Logger for TimeTrackMain */
-    static final org.apache.log4j.Logger LOG = org.apache.log4j.Logger.getLogger(TimeTrackMain.class);
+    static final org.apache.log4j.Logger LOG = org.apache.log4j.Logger
+            .getLogger(TimeTrackMain.class);
 
     /**
      * Auto-generated main method to display this JFrame
@@ -62,27 +67,41 @@ public class TimeTrackMain extends javax.swing.JFrame {
         });
     }
 
-    private JTabbedPane tabPane;
+    private AbstractAction saveAction;
+
+    private JButton countdownStop;
+
+    private JButton startClosing;
+
+    private JPanel countdownActions;
+
+    private JLabel countdownLabel;
+
+    private JPanel countDownPane;
 
     private JTable lastEventsTable;
 
-    private JLabel taskLabel;
+    private JScrollPane eventScrollPane;
 
-    JScrollPane eventScrollPane;
+    private JButton saveandcloseButton;
 
-    private AbstractAction saveAction;
+    private JTextField taskField;
+
+    private JButton newEntryButton;
+
+    private JPanel newEventPanel;
+
+    private JPanel newEventTab;
+
+    private JTabbedPane tabPane;
+
+    private AbstractAction stopCountdownAction;
+
+    private AbstractAction countdownAction;
 
     private TimeEntryTableModel lastEventsTableModel;
 
     private TimeEntryController controller;
-
-    private JButton newEntryButton;
-
-    private JTextField taskField;
-
-    private JPanel newEventTab;
-
-    private JPanel newEventPanel;
 
     public TimeTrackMain() {
         super();
@@ -107,7 +126,7 @@ public class TimeTrackMain extends javax.swing.JFrame {
     }
 
     @SuppressWarnings("serial")
-    private AbstractAction getSaveAction() {
+    public AbstractAction getSaveAction() {
         if (saveAction == null) {
             saveAction = new AbstractAction("Save", null) {
                 public void actionPerformed(ActionEvent evt) {
@@ -124,6 +143,117 @@ public class TimeTrackMain extends javax.swing.JFrame {
 
     private void initGUI() {
         try {
+            {
+                tabPane = new JTabbedPane();
+                getContentPane().add(tabPane, BorderLayout.CENTER);
+                {
+                    newEventTab = new JPanel();
+                    tabPane.addTab("new", null, newEventTab, null);
+                    BorderLayout newEventTabLayout = new BorderLayout();
+                    newEventTab.setLayout(newEventTabLayout);
+                    newEventTab.setPreferredSize(new java.awt.Dimension(387,
+                            225));
+                    {
+                        newEventPanel = new JPanel();
+                        newEventTab.add(newEventPanel, BorderLayout.SOUTH);
+                        BorderLayout newEventPanelLayout = new BorderLayout();
+                        newEventPanel.setLayout(newEventPanelLayout);
+                        {
+                            newEntryButton = new JButton();
+                            newEventPanel
+                                    .add(newEntryButton, BorderLayout.WEST);
+                            newEntryButton.setText("Save");
+                            newEntryButton.setAction(getSaveAction());
+                        }
+                        {
+                            taskField = new JTextField();
+                            newEventPanel.add(taskField, BorderLayout.CENTER);
+                            taskField.setText("");
+                        }
+                        {
+                            saveandcloseButton = new JButton();
+                            newEventPanel.add(saveandcloseButton,
+                                    BorderLayout.EAST);
+                            saveandcloseButton.setText("Save and Closing");
+                            saveandcloseButton
+                                    .addActionListener(new ActionListener() {
+                                        public void actionPerformed(
+                                                ActionEvent evt) {
+                                            System.out
+                                                    .println("saveandcloseButton.actionPerformed, event="
+                                                            + evt);
+                                            getSaveAction()
+                                                    .actionPerformed(evt);
+                                            getCountdownAction()
+                                                    .actionPerformed(evt);
+                                        }
+                                    });
+                        }
+                    }
+                    {
+                        eventScrollPane = new JScrollPane();
+                        eventScrollPane.getVerticalScrollBar().setValue(10000);
+                        newEventTab.add(eventScrollPane, BorderLayout.CENTER);
+                        {
+                            lastEventsTableModel = new TimeEntryTableModel();
+                            lastEventsTable = new JTable();
+                            eventScrollPane.setViewportView(lastEventsTable);
+                            lastEventsTable.setModel(lastEventsTableModel);
+                            lastEventsTable
+                                    .addMouseListener(new MouseAdapter() {
+                                        @Override
+                                        public void mouseClicked(MouseEvent evt) {
+                                            lastEventsTableMouseClicked(evt);
+                                        }
+                                    });
+                            TableColumn col = lastEventsTable.getColumnModel()
+                                    .getColumn(0);
+                            col.setMinWidth(150);
+                            col.setMaxWidth(150);
+                            col = lastEventsTable.getColumnModel().getColumn(1);
+                            col.setMinWidth(100);
+                            col.setMaxWidth(100);
+                        }
+                    }
+                }
+                {
+                    countDownPane = new JPanel();
+                    tabPane.addTab("stop", null, countDownPane, null);
+                    BorderLayout countDownPaneLayout = new BorderLayout();
+                    countDownPane.setLayout(countDownPaneLayout);
+                    {
+                        countdownLabel = new JLabel();
+                        countDownPane.add(countdownLabel, BorderLayout.CENTER);
+                        countdownLabel.setText("Countdown");
+                        countdownLabel
+                                .setHorizontalAlignment(SwingConstants.CENTER);
+                        countdownLabel
+                                .setHorizontalTextPosition(SwingConstants.CENTER);
+                    }
+                    {
+                        countdownActions = new JPanel();
+                        countDownPane.add(countdownActions, BorderLayout.SOUTH);
+                        BorderLayout countdownActionsLayout = new BorderLayout();
+                        countdownActions.setLayout(countdownActionsLayout);
+                        countdownActions.setBounds(223, 284, 10, 10);
+                        {
+                            startClosing = new JButton();
+                            countdownActions.add(startClosing,
+                                    BorderLayout.WEST);
+                            startClosing.setAction(getCountdownAction());
+                            startClosing.addActionListener(countdownAction);
+                        }
+                        {
+                            countdownStop = new JButton();
+                            countdownActions.add(countdownStop,
+                                    BorderLayout.EAST);
+                            countdownStop.setAction(getStopCountdownAction());
+                            countdownStop
+                                    .addActionListener(stopCountdownAction);
+                        }
+                    }
+                }
+            }
             {
                 this.addWindowListener(new WindowAdapter() {
                     @Override
@@ -144,61 +274,6 @@ public class TimeTrackMain extends javax.swing.JFrame {
                     }
                 });
             }
-            {
-                tabPane = new JTabbedPane();
-                getContentPane().add(tabPane, BorderLayout.CENTER);
-                {
-                    newEventTab = new JPanel();
-                    tabPane.addTab("new", null, newEventTab, null);
-                    BorderLayout newEventTabLayout = new BorderLayout();
-                    newEventTab.setLayout(newEventTabLayout);
-                    newEventTab.setPreferredSize(new java.awt.Dimension(387, 225));
-                    {
-                        newEventPanel = new JPanel();
-                        BorderLayout newEventPanelLayout = new BorderLayout();
-                        newEventPanel.setLayout(newEventPanelLayout);
-                        newEventTab.add(newEventPanel, BorderLayout.SOUTH);
-                        {
-                            taskLabel = new JLabel();
-                            newEventPanel.add(taskLabel, BorderLayout.WEST);
-                            taskLabel.setText("Aufgabe");
-                        }
-                        {
-                            taskField = new JTextField();
-                            newEventPanel.add(getTaskField(), BorderLayout.CENTER);
-                            taskField.setText("");
-                        }
-                        {
-                            newEntryButton = new JButton();
-                            newEventPanel.add(newEntryButton, BorderLayout.EAST);
-                            newEntryButton.setText("Save");
-                            newEntryButton.setAction(getSaveAction());
-                        }
-                    }
-                    {
-                        eventScrollPane = new JScrollPane();
-                        newEventTab.add(eventScrollPane, BorderLayout.CENTER);
-                        {
-                            lastEventsTableModel = new TimeEntryTableModel();
-                            lastEventsTable = new JTable();
-                            eventScrollPane.setViewportView(lastEventsTable);
-                            lastEventsTable.setModel(lastEventsTableModel);
-                            lastEventsTable.addMouseListener(new MouseAdapter() {
-                                @Override
-                                public void mouseClicked(MouseEvent evt) {
-                                    lastEventsTableMouseClicked(evt);
-                                }
-                            });
-                            TableColumn col = lastEventsTable.getColumnModel().getColumn(0);
-                            col.setMinWidth(150);
-                            col.setMaxWidth(150);
-                            col = lastEventsTable.getColumnModel().getColumn(1);
-                            col.setMinWidth(100);
-                            col.setMaxWidth(100);
-                        }
-                    }
-                }
-            }
             setSize(400, 300);
             setupKill();
         } catch (Exception e) {
@@ -209,7 +284,8 @@ public class TimeTrackMain extends javax.swing.JFrame {
     void lastEventsTableMouseClicked(MouseEvent evt) {
         System.out.println("lastEventsTable.mouseClicked, event=" + evt);
         int row = lastEventsTable.getSelectedRow();
-        getTaskField().setText(getLastEventsTableModel().getEntries().get(row).getTask());
+        getTaskField().setText(
+                getLastEventsTableModel().getEntries().get(row).getTask());
     }
 
     public void refresh() {
@@ -218,7 +294,6 @@ public class TimeTrackMain extends javax.swing.JFrame {
         getLastEventsTableModel().fireTableDataChanged();
         SwingUtilities.invokeLater(new Runnable() {
             public void run() {
-                eventScrollPane.getVerticalScrollBar().setValue(10000);
             }
         });
     }
@@ -262,6 +337,26 @@ public class TimeTrackMain extends javax.swing.JFrame {
     void thisWindowClosed(WindowEvent evt) {
         LOG.info("Shutdown. " + evt);
         getController().shutdown();
+    }
+
+    public AbstractAction getCountdownAction() {
+        if (countdownAction == null) {
+            countdownAction = new AbstractAction("Countdown and Close", null) {
+                public void actionPerformed(ActionEvent evt) {
+                }
+            };
+        }
+        return countdownAction;
+    }
+
+    public AbstractAction getStopCountdownAction() {
+        if (stopCountdownAction == null) {
+            stopCountdownAction = new AbstractAction("Stop Countdown", null) {
+                public void actionPerformed(ActionEvent evt) {
+                }
+            };
+        }
+        return stopCountdownAction;
     }
 
 }
