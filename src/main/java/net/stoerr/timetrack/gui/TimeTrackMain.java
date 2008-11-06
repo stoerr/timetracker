@@ -1,32 +1,14 @@
 package net.stoerr.timetrack.gui;
 
 import java.awt.BorderLayout;
-import java.awt.FlowLayout;
 import java.awt.Frame;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
-import java.awt.event.MouseAdapter;
-import java.awt.event.MouseEvent;
-import java.awt.event.WindowAdapter;
-import java.awt.event.WindowEvent;
+import java.awt.event.*;
 import java.util.List;
+import java.util.Timer;
+import java.util.TimerTask;
 
-import javax.swing.AbstractAction;
-import javax.swing.BoxLayout;
-import javax.swing.JButton;
-import javax.swing.JLabel;
-import javax.swing.JPanel;
-import javax.swing.JScrollPane;
-import javax.swing.JTabbedPane;
-import javax.swing.JTable;
-import javax.swing.JTextField;
-import javax.swing.SwingConstants;
-import javax.swing.SwingUtilities;
-import javax.swing.SwingWorker;
-import javax.swing.WindowConstants;
+import javax.swing.*;
 import javax.swing.table.TableColumn;
-
-import sun.swing.SwingUtilities2;
 
 import net.stoerr.timetrack.controller.TimeEntryController;
 import net.stoerr.timetrack.entity.TimeEntry;
@@ -43,12 +25,37 @@ import net.stoerr.timetrack.entity.TimeEntry;
  */
 public class TimeTrackMain extends javax.swing.JFrame {
 
+    private class CountdownWorker extends SwingWorker<Void, Integer> {
+
+        @Override
+        protected Void doInBackground() throws Exception {
+            for (int i = 0; i < COUNTDOWN_SECONDS; ++i) {
+                publish(COUNTDOWN_SECONDS - i);
+                Thread.sleep(1000);
+            }
+            return null;
+        }
+
+        @Override
+        protected void done() {
+            if (!isCancelled()) {
+                countdownLabel.setText("Shutdown in progress");
+                TimeTrackMain.this.dispose();
+            }
+        }
+
+        @Override
+        protected void process(List<Integer> arg0) {
+            countdownLabel.setText("Countdown : " + arg0.get(0));
+        }
+
+    }
+
     /** SUID */
     private static final long serialVersionUID = 8552907221005431441L;
 
     /** Logger for TimeTrackMain */
-    static final org.apache.log4j.Logger LOG = org.apache.log4j.Logger
-            .getLogger(TimeTrackMain.class);
+    static final org.apache.log4j.Logger LOG = org.apache.log4j.Logger.getLogger(TimeTrackMain.class);
 
     /**
      * Auto-generated main method to display this JFrame
@@ -60,7 +67,7 @@ public class TimeTrackMain extends javax.swing.JFrame {
                 controller.startup(); // start hibernate now.
                 TimeTrackMain inst = new TimeTrackMain(controller);
                 inst.setLocationRelativeTo(null);
-                inst.setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
+                inst.setDefaultCloseOperation(WindowConstants.DISPOSE_ON_CLOSE);
                 inst.setTitle("Time tracker HPS");
                 inst.setExtendedState(Frame.MAXIMIZED_BOTH);
                 inst.setVisible(true);
@@ -105,6 +112,10 @@ public class TimeTrackMain extends javax.swing.JFrame {
 
     private TimeEntryController controller;
 
+    public static final int COUNTDOWN_SECONDS = 60;
+
+    private CountdownWorker countdown = null;
+
     public TimeTrackMain() {
         super();
         initGUI();
@@ -123,6 +134,21 @@ public class TimeTrackMain extends javax.swing.JFrame {
         return controller;
     }
 
+    public AbstractAction getCountdownAction() {
+        if (countdownAction == null) {
+            countdownAction = new AbstractAction("Countdown and Close", null) {
+                public void actionPerformed(ActionEvent evt) {
+                    if (null == countdown) {
+                        tabPane.setSelectedComponent(countDownPane);
+                        countdown = new CountdownWorker();
+                        countdown.execute();
+                    }
+                }
+            };
+        }
+        return countdownAction;
+    }
+
     public TimeEntryTableModel getLastEventsTableModel() {
         return lastEventsTableModel;
     }
@@ -139,6 +165,21 @@ public class TimeTrackMain extends javax.swing.JFrame {
         return saveAction;
     }
 
+    public AbstractAction getStopCountdownAction() {
+        if (stopCountdownAction == null) {
+            stopCountdownAction = new AbstractAction("Stop Countdown", null) {
+                public void actionPerformed(ActionEvent evt) {
+                    if (null != countdown) {
+                        countdown.cancel(true);
+                        countdown = null;
+                        countdownLabel.setText("Countdown");
+                    }
+                }
+            };
+        }
+        return stopCountdownAction;
+    }
+
     public JTextField getTaskField() {
         return taskField;
     }
@@ -153,8 +194,7 @@ public class TimeTrackMain extends javax.swing.JFrame {
                     tabPane.addTab("new", null, newEventTab, null);
                     BorderLayout newEventTabLayout = new BorderLayout();
                     newEventTab.setLayout(newEventTabLayout);
-                    newEventTab.setPreferredSize(new java.awt.Dimension(387,
-                            225));
+                    newEventTab.setPreferredSize(new java.awt.Dimension(387, 225));
                     {
                         newEventPanel = new JPanel();
                         newEventTab.add(newEventPanel, BorderLayout.SOUTH);
@@ -162,8 +202,7 @@ public class TimeTrackMain extends javax.swing.JFrame {
                         newEventPanel.setLayout(newEventPanelLayout);
                         {
                             newEntryButton = new JButton();
-                            newEventPanel
-                                    .add(newEntryButton, BorderLayout.WEST);
+                            newEventPanel.add(newEntryButton, BorderLayout.WEST);
                             newEntryButton.setText("Save");
                             newEntryButton.setAction(getSaveAction());
                         }
@@ -174,22 +213,15 @@ public class TimeTrackMain extends javax.swing.JFrame {
                         }
                         {
                             saveandcloseButton = new JButton();
-                            newEventPanel.add(saveandcloseButton,
-                                    BorderLayout.EAST);
+                            newEventPanel.add(saveandcloseButton, BorderLayout.EAST);
                             saveandcloseButton.setText("Save and Closing");
-                            saveandcloseButton
-                                    .addActionListener(new ActionListener() {
-                                        public void actionPerformed(
-                                                ActionEvent evt) {
-                                            System.out
-                                                    .println("saveandcloseButton.actionPerformed, event="
-                                                            + evt);
-                                            getSaveAction()
-                                                    .actionPerformed(evt);
-                                            getCountdownAction()
-                                                    .actionPerformed(evt);
-                                        }
-                                    });
+                            saveandcloseButton.addActionListener(new ActionListener() {
+                                public void actionPerformed(ActionEvent evt) {
+                                    System.out.println("saveandcloseButton.actionPerformed, event=" + evt);
+                                    getSaveAction().actionPerformed(evt);
+                                    getCountdownAction().actionPerformed(evt);
+                                }
+                            });
                         }
                     }
                     {
@@ -201,15 +233,13 @@ public class TimeTrackMain extends javax.swing.JFrame {
                             lastEventsTable = new JTable();
                             eventScrollPane.setViewportView(lastEventsTable);
                             lastEventsTable.setModel(lastEventsTableModel);
-                            lastEventsTable
-                                    .addMouseListener(new MouseAdapter() {
-                                        @Override
-                                        public void mouseClicked(MouseEvent evt) {
-                                            lastEventsTableMouseClicked(evt);
-                                        }
-                                    });
-                            TableColumn col = lastEventsTable.getColumnModel()
-                                    .getColumn(0);
+                            lastEventsTable.addMouseListener(new MouseAdapter() {
+                                @Override
+                                public void mouseClicked(MouseEvent evt) {
+                                    lastEventsTableMouseClicked(evt);
+                                }
+                            });
+                            TableColumn col = lastEventsTable.getColumnModel().getColumn(0);
                             col.setMinWidth(150);
                             col.setMaxWidth(150);
                             col = lastEventsTable.getColumnModel().getColumn(1);
@@ -227,10 +257,8 @@ public class TimeTrackMain extends javax.swing.JFrame {
                         countdownLabel = new JLabel();
                         countDownPane.add(countdownLabel, BorderLayout.CENTER);
                         countdownLabel.setText("Countdown");
-                        countdownLabel
-                                .setHorizontalAlignment(SwingConstants.CENTER);
-                        countdownLabel
-                                .setHorizontalTextPosition(SwingConstants.CENTER);
+                        countdownLabel.setHorizontalAlignment(SwingConstants.CENTER);
+                        countdownLabel.setHorizontalTextPosition(SwingConstants.CENTER);
                     }
                     {
                         countdownActions = new JPanel();
@@ -240,18 +268,15 @@ public class TimeTrackMain extends javax.swing.JFrame {
                         countdownActions.setBounds(223, 284, 10, 10);
                         {
                             startClosing = new JButton();
-                            countdownActions.add(startClosing,
-                                    BorderLayout.WEST);
+                            countdownActions.add(startClosing, BorderLayout.WEST);
                             startClosing.setAction(getCountdownAction());
                             startClosing.addActionListener(countdownAction);
                         }
                         {
                             countdownStop = new JButton();
-                            countdownActions.add(countdownStop,
-                                    BorderLayout.EAST);
+                            countdownActions.add(countdownStop, BorderLayout.EAST);
                             countdownStop.setAction(getStopCountdownAction());
-                            countdownStop
-                                    .addActionListener(stopCountdownAction);
+                            countdownStop.addActionListener(stopCountdownAction);
                         }
                     }
                 }
@@ -286,8 +311,7 @@ public class TimeTrackMain extends javax.swing.JFrame {
     void lastEventsTableMouseClicked(MouseEvent evt) {
         System.out.println("lastEventsTable.mouseClicked, event=" + evt);
         int row = lastEventsTable.getSelectedRow();
-        getTaskField().setText(
-                getLastEventsTableModel().getEntries().get(row).getTask());
+        getTaskField().setText(getLastEventsTableModel().getEntries().get(row).getTask());
     }
 
     public void refresh() {
@@ -309,21 +333,21 @@ public class TimeTrackMain extends javax.swing.JFrame {
     }
 
     private void setupKill() {
-        new SwingWorker<Void, Void>() {
+        TimerTask killtask = new TimerTask() {
 
             @Override
-            protected Void doInBackground() throws Exception {
-                Thread.sleep(15 * 1000 * 1000);
-                return null;
+            public void run() {
+                SwingUtilities.invokeLater(new Runnable() {
+
+                    @Override
+                    public void run() {
+                        dispose();
+                    }
+                });
             }
 
-            @Override
-            protected void done() {
-                setVisible(false);
-                dispose();
-            }
-
-        }.execute();
+        };
+        new Timer(true).schedule(killtask, 10 * 1000 * 1000);
     }
 
     void thisWindowActivated(WindowEvent evt) {
@@ -339,77 +363,6 @@ public class TimeTrackMain extends javax.swing.JFrame {
     void thisWindowClosed(WindowEvent evt) {
         LOG.info("Shutdown. " + evt);
         getController().shutdown();
-    }
-
-    public static final int COUNTDOWN_SECONDS = 10;
-
-    private CountdownWorker countdown = null;
-
-    private class CountdownWorker extends SwingWorker<Void, Integer> {
-
-        @Override
-        protected Void doInBackground() throws Exception {
-            for (int i = 0; i < COUNTDOWN_SECONDS; ++i) {
-                publish(COUNTDOWN_SECONDS - i);
-                Thread.sleep(1000);
-            }
-            return null;
-        }
-
-        @Override
-        protected void process(List<Integer> arg0) {
-            countdownLabel.setText("Countdown : " + arg0.get(0));
-        }
-
-        @Override
-        protected void done() {
-            if (!isCancelled()) {
-                countdownLabel.setText("Shutdown in progress");
-                TimeTrackMain.this.dispose();
-                /* SwingUtilities.invokeLater(new Runnable() {
-
-                    public void run() {
-                        try {
-                            Thread.sleep(1000);
-                        } catch (InterruptedException e) {
-                            LOG.error(e, e);
-                        }
-                        System.exit(0);
-                    }
-                }); */
-            }
-        }
-
-    }
-
-    public AbstractAction getCountdownAction() {
-        if (countdownAction == null) {
-            countdownAction = new AbstractAction("Countdown and Close", null) {
-                public void actionPerformed(ActionEvent evt) {
-                    if (null == countdown) {
-                        tabPane.setSelectedComponent(countDownPane);
-                        countdown = new CountdownWorker();
-                        countdown.execute();
-                    }
-                }
-            };
-        }
-        return countdownAction;
-    }
-
-    public AbstractAction getStopCountdownAction() {
-        if (stopCountdownAction == null) {
-            stopCountdownAction = new AbstractAction("Stop Countdown", null) {
-                public void actionPerformed(ActionEvent evt) {
-                    if (null != countdown) {
-                        countdown.cancel(true);
-                        countdown = null;
-                        countdownLabel.setText("Countdown");
-                    }
-                }
-            };
-        }
-        return stopCountdownAction;
     }
 
 }
