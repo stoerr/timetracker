@@ -2,6 +2,7 @@ package net.stoerr.timetrack.gui;
 
 import java.awt.BorderLayout;
 import java.awt.Frame;
+import java.awt.Toolkit;
 import java.awt.event.*;
 import java.util.List;
 import java.util.Timer;
@@ -40,6 +41,7 @@ public class TimeTrackMain extends javax.swing.JFrame {
         protected void done() {
             if (!isCancelled()) {
                 countdownLabel.setText("Shutdown in progress");
+                Toolkit.getDefaultToolkit().beep();
                 TimeTrackMain.this.dispose();
             }
         }
@@ -84,9 +86,9 @@ public class TimeTrackMain extends javax.swing.JFrame {
 
     private JPanel countdownActions;
 
-    private JLabel countdownLabel;
+    JLabel countdownLabel;
 
-    private JPanel countDownPane;
+    JPanel countDownPane;
 
     private JTable lastEventsTable;
 
@@ -102,7 +104,7 @@ public class TimeTrackMain extends javax.swing.JFrame {
 
     private JPanel newEventTab;
 
-    private JTabbedPane tabPane;
+    JTabbedPane tabPane;
 
     private AbstractAction stopCountdownAction;
 
@@ -114,7 +116,7 @@ public class TimeTrackMain extends javax.swing.JFrame {
 
     public static final int COUNTDOWN_SECONDS = 60;
 
-    private CountdownWorker countdown = null;
+    CountdownWorker countdown = null;
 
     public TimeTrackMain() {
         super();
@@ -318,10 +320,6 @@ public class TimeTrackMain extends javax.swing.JFrame {
         List<TimeEntry> entries = getController().getEntries();
         getLastEventsTableModel().setEntries(entries);
         getLastEventsTableModel().fireTableDataChanged();
-        SwingUtilities.invokeLater(new Runnable() {
-            public void run() {
-            }
-        });
     }
 
     public void save() {
