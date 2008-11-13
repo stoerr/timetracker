@@ -3,11 +3,7 @@ package net.stoerr.timetrack.controller;
 import java.util.Date;
 import java.util.List;
 
-import javax.persistence.EntityManager;
-import javax.persistence.EntityManagerFactory;
-import javax.persistence.EntityTransaction;
-import javax.persistence.Persistence;
-import javax.persistence.Query;
+import javax.persistence.*;
 
 import net.stoerr.timetrack.TimeTrackConstants;
 import net.stoerr.timetrack.entity.TimeEntry;
@@ -74,7 +70,8 @@ public class TimeEntryController implements TimeTrackConstants {
 
     @SuppressWarnings("unchecked")
     public List<TimeEntry> getEntries() {
-        final List<TimeEntry> resultList = getEntityManager().createQuery("from TimeEntry order by time").getResultList();
+        final List<TimeEntry> resultList = getEntityManager().createQuery("from TimeEntry order by time desc")
+                .getResultList();
         return resultList;
     }
 
