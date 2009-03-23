@@ -108,7 +108,7 @@ public class TimeTrackMain extends javax.swing.JFrame implements TimeTrackConsta
 
     private JScrollPane eventScrollPane;
 
-    private JButton saveandcloseButton;
+    private JButton saveandclosingButton;
 
     private JTextField taskField;
 
@@ -226,10 +226,10 @@ public class TimeTrackMain extends javax.swing.JFrame implements TimeTrackConsta
                             taskField.setText("");
                         }
                         {
-                            saveandcloseButton = new JButton();
-                            newEventPanel.add(saveandcloseButton, BorderLayout.EAST);
-                            saveandcloseButton.setText("Save and Closing");
-                            saveandcloseButton.addActionListener(new ActionListener() {
+                            saveandclosingButton = new JButton();
+                            newEventPanel.add(saveandclosingButton, BorderLayout.EAST);
+                            saveandclosingButton.setText("Save and Closing");
+                            saveandclosingButton.addActionListener(new ActionListener() {
                                 public void actionPerformed(ActionEvent evt) {
                                     System.out.println("saveandcloseButton.actionPerformed, event=" + evt);
                                     getSaveAction().actionPerformed(evt);
