@@ -3,12 +3,28 @@ package net.stoerr.timetrack.gui;
 import java.awt.BorderLayout;
 import java.awt.Frame;
 import java.awt.Toolkit;
-import java.awt.event.*;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
+import java.awt.event.WindowAdapter;
+import java.awt.event.WindowEvent;
 import java.util.List;
 import java.util.Timer;
 import java.util.TimerTask;
 
-import javax.swing.*;
+import javax.swing.AbstractAction;
+import javax.swing.JButton;
+import javax.swing.JLabel;
+import javax.swing.JPanel;
+import javax.swing.JScrollPane;
+import javax.swing.JTabbedPane;
+import javax.swing.JTable;
+import javax.swing.JTextField;
+import javax.swing.SwingConstants;
+import javax.swing.SwingUtilities;
+import javax.swing.SwingWorker;
+import javax.swing.WindowConstants;
 import javax.swing.table.TableColumn;
 
 import net.stoerr.timetrack.TimeTrackConstants;
@@ -48,7 +64,7 @@ public class TimeTrackMain extends javax.swing.JFrame implements TimeTrackConsta
         }
 
         @Override
-        protected void process(List<Integer> arg0) {
+        protected void process(final List<Integer> arg0) {
             countdownLabel.setText("Countdown : " + arg0.get(0));
         }
 
@@ -63,12 +79,12 @@ public class TimeTrackMain extends javax.swing.JFrame implements TimeTrackConsta
     /**
      * Auto-generated main method to display this JFrame
      */
-    public static void main(String[] args) {
+    public static void main(final String[] args) {
         SwingUtilities.invokeLater(new Runnable() {
             public void run() {
-                TimeEntryController controller = new TimeEntryController();
+                final TimeEntryController controller = new TimeEntryController();
                 controller.startup(); // start hibernate now.
-                TimeTrackMain inst = new TimeTrackMain(controller);
+                final TimeTrackMain inst = new TimeTrackMain(controller);
                 inst.setLocationRelativeTo(null);
                 inst.setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
                 inst.setTitle("Time tracker HPS");
@@ -82,14 +98,19 @@ public class TimeTrackMain extends javax.swing.JFrame implements TimeTrackConsta
 
     /** Sometimes the autoclose does not work. This is the hard way. */
     private static void setupEmergencyClose() {
-        Timer timer = new Timer();
-        TimerTask killtask = new TimerTask() {
+        final Thread killer = new Thread() {
             @Override
             public void run() {
-                System.exit(1);
+                try {
+                    Thread.sleep(DELAY_EMERGENCYKILL);
+                    System.exit(1);
+                } catch (final InterruptedException e) {
+                    e.printStackTrace();
+                }
             }
         };
-        timer.schedule(killtask, DELAY_EMERGENCYKILL);
+        killer.setDaemon(true);
+        killer.start();
     }
 
     private AbstractAction saveAction;
@@ -135,7 +156,7 @@ public class TimeTrackMain extends javax.swing.JFrame implements TimeTrackConsta
         initGUI();
     }
 
-    public TimeTrackMain(TimeEntryController theController) {
+    public TimeTrackMain(final TimeEntryController theController) {
         super();
         controller = theController;
         initGUI();
@@ -151,7 +172,7 @@ public class TimeTrackMain extends javax.swing.JFrame implements TimeTrackConsta
     public AbstractAction getCountdownAction() {
         if (countdownAction == null) {
             countdownAction = new AbstractAction("Countdown and Close", null) {
-                public void actionPerformed(ActionEvent evt) {
+                public void actionPerformed(final ActionEvent evt) {
                     if (null == countdown) {
                         tabPane.setSelectedComponent(countDownPane);
                         countdown = new CountdownWorker();
@@ -171,7 +192,7 @@ public class TimeTrackMain extends javax.swing.JFrame implements TimeTrackConsta
     public AbstractAction getSaveAction() {
         if (saveAction == null) {
             saveAction = new AbstractAction("Save", null) {
-                public void actionPerformed(ActionEvent evt) {
+                public void actionPerformed(final ActionEvent evt) {
                     save();
                 }
             };
@@ -182,7 +203,7 @@ public class TimeTrackMain extends javax.swing.JFrame implements TimeTrackConsta
     public AbstractAction getStopCountdownAction() {
         if (stopCountdownAction == null) {
             stopCountdownAction = new AbstractAction("Stop Countdown", null) {
-                public void actionPerformed(ActionEvent evt) {
+                public void actionPerformed(final ActionEvent evt) {
                     if (null != countdown) {
                         countdown.cancel(true);
                         countdown = null;
@@ -206,13 +227,13 @@ public class TimeTrackMain extends javax.swing.JFrame implements TimeTrackConsta
                 {
                     newEventTab = new JPanel();
                     tabPane.addTab("new", null, newEventTab, null);
-                    BorderLayout newEventTabLayout = new BorderLayout();
+                    final BorderLayout newEventTabLayout = new BorderLayout();
                     newEventTab.setLayout(newEventTabLayout);
                     newEventTab.setPreferredSize(new java.awt.Dimension(387, 225));
                     {
                         newEventPanel = new JPanel();
                         newEventTab.add(newEventPanel, BorderLayout.SOUTH);
-                        BorderLayout newEventPanelLayout = new BorderLayout();
+                        final BorderLayout newEventPanelLayout = new BorderLayout();
                         newEventPanel.setLayout(newEventPanelLayout);
                         {
                             newEntryButton = new JButton();
@@ -230,7 +251,7 @@ public class TimeTrackMain extends javax.swing.JFrame implements TimeTrackConsta
                             newEventPanel.add(saveandclosingButton, BorderLayout.EAST);
                             saveandclosingButton.setText("Save and Closing");
                             saveandclosingButton.addActionListener(new ActionListener() {
-                                public void actionPerformed(ActionEvent evt) {
+                                public void actionPerformed(final ActionEvent evt) {
                                     System.out.println("saveandcloseButton.actionPerformed, event=" + evt);
                                     getSaveAction().actionPerformed(evt);
                                     getCountdownAction().actionPerformed(evt);
@@ -249,7 +270,7 @@ public class TimeTrackMain extends javax.swing.JFrame implements TimeTrackConsta
                             lastEventsTable.setModel(lastEventsTableModel);
                             lastEventsTable.addMouseListener(new MouseAdapter() {
                                 @Override
-                                public void mouseClicked(MouseEvent evt) {
+                                public void mouseClicked(final MouseEvent evt) {
                                     lastEventsTableMouseClicked(evt);
                                 }
                             });
@@ -265,7 +286,7 @@ public class TimeTrackMain extends javax.swing.JFrame implements TimeTrackConsta
                 {
                     countDownPane = new JPanel();
                     tabPane.addTab("stop", null, countDownPane, null);
-                    BorderLayout countDownPaneLayout = new BorderLayout();
+                    final BorderLayout countDownPaneLayout = new BorderLayout();
                     countDownPane.setLayout(countDownPaneLayout);
                     {
                         countdownLabel = new JLabel();
@@ -277,7 +298,7 @@ public class TimeTrackMain extends javax.swing.JFrame implements TimeTrackConsta
                     {
                         countdownActions = new JPanel();
                         countDownPane.add(countdownActions, BorderLayout.SOUTH);
-                        BorderLayout countdownActionsLayout = new BorderLayout();
+                        final BorderLayout countdownActionsLayout = new BorderLayout();
                         countdownActions.setLayout(countdownActionsLayout);
                         countdownActions.setBounds(223, 284, 10, 10);
                         {
@@ -298,18 +319,18 @@ public class TimeTrackMain extends javax.swing.JFrame implements TimeTrackConsta
             {
                 this.addWindowListener(new WindowAdapter() {
                     @Override
-                    public void windowActivated(WindowEvent evt) {
+                    public void windowActivated(final WindowEvent evt) {
                         thisWindowActivated(evt);
                     }
 
                     @Override
-                    public void windowClosed(WindowEvent evt) {
+                    public void windowClosed(final WindowEvent evt) {
                         LOG.info("windowClosed");
                         thisWindowClosed(evt);
                     }
 
                     @Override
-                    public void windowClosing(WindowEvent evt) {
+                    public void windowClosing(final WindowEvent evt) {
                         LOG.info("windowClosing");
                         thisWindowClosed(evt);
                     }
@@ -317,19 +338,19 @@ public class TimeTrackMain extends javax.swing.JFrame implements TimeTrackConsta
             }
             setSize(400, 300);
             setupKill();
-        } catch (Exception e) {
+        } catch (final Exception e) {
             LOG.error(e, e);
         }
     }
 
-    void lastEventsTableMouseClicked(MouseEvent evt) {
+    void lastEventsTableMouseClicked(final MouseEvent evt) {
         System.out.println("lastEventsTable.mouseClicked, event=" + evt);
-        int row = lastEventsTable.getSelectedRow();
+        final int row = lastEventsTable.getSelectedRow();
         getTaskField().setText(getLastEventsTableModel().getEntries().get(row).getTask());
     }
 
     public void refresh() {
-        List<TimeEntry> entries = getController().getEntries();
+        final List<TimeEntry> entries = getController().getEntries();
         getLastEventsTableModel().setEntries(entries);
         getLastEventsTableModel().fireTableDataChanged();
     }
@@ -343,7 +364,7 @@ public class TimeTrackMain extends javax.swing.JFrame implements TimeTrackConsta
     }
 
     private void setupKill() {
-        TimerTask killtask = new TimerTask() {
+        final TimerTask killtask = new TimerTask() {
 
             @Override
             public void run() {
@@ -360,7 +381,7 @@ public class TimeTrackMain extends javax.swing.JFrame implements TimeTrackConsta
         new Timer(true).schedule(killtask, DELAY_KILL);
     }
 
-    void thisWindowActivated(WindowEvent evt) {
+    void thisWindowActivated(final WindowEvent evt) {
         LOG.info("this.windowActivated, event=" + evt);
         SwingUtilities.invokeLater(new Runnable() {
             @Override
@@ -370,7 +391,7 @@ public class TimeTrackMain extends javax.swing.JFrame implements TimeTrackConsta
         });
     }
 
-    void thisWindowClosed(WindowEvent evt) {
+    void thisWindowClosed(final WindowEvent evt) {
         LOG.info("Shutdown. " + evt);
         getController().shutdown();
     }
