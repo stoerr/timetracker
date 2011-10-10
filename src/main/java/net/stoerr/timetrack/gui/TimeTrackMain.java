@@ -249,7 +249,7 @@ public class TimeTrackMain extends javax.swing.JFrame implements TimeTrackConsta
                         {
                             saveandclosingButton = new JButton();
                             newEventPanel.add(saveandclosingButton, BorderLayout.EAST);
-                            saveandclosingButton.setText("Save and Closing");
+                            saveandclosingButton.setText("Save and Close");
                             saveandclosingButton.addActionListener(new ActionListener() {
                                 public void actionPerformed(final ActionEvent evt) {
                                     System.out.println("saveandcloseButton.actionPerformed, event=" + evt);

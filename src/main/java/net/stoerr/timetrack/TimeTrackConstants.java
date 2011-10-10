@@ -23,6 +23,6 @@ public interface TimeTrackConstants {
     long DELAY_EMERGENCYKILL = 20 * 60 * 1000;
 
     /** Countdown Zeit in Sekunden */
-    int COUNTDOWN_SECONDS = 120;
+    int COUNTDOWN_SECONDS = 1;
 
 }
